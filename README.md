@@ -1,6 +1,6 @@
 # **README**
 
-<div style="width:730px; height:320px">
+<div style="width:430px; height:220px">
 
 ![alt text](https://github.com/Bram-Wel/AirBnB_clone/blob/main/images/airbnb.jpeg?raw=true "logo")
 
@@ -50,6 +50,18 @@ e952b772-80a5-41e9-b728-6bc4dc5c21b4
 ** no instance found **
 (hbnb)
 ```
+
+## Commands
+| Command | Usage                     |
+|---------|---------------------------|
+| Quit    | Exit the interpreter      |
+| Help    | Show help message         |
+| create  | Create new objects        |
+| show    | Display the object        |
+| all     | Show all objects          |
+| update  | Change object attributes  |
+| destroy | Delete created objects    |
+
 
 ## Installation
 ```bash
