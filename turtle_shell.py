@@ -1,9 +1,10 @@
-import cmd, sys
+import cmd
+import sys
 from turtle import *
 
 
 class TurtleShell(cmd.Cmd):
-    intro = "Welcome to the turtle shell.\n     Type help or ? to list commands.\n"
+    intro = "Welcome to the turtle shell.\nType help or ? to list commands.\n"
     prompt = "[turtle] "
     file = None
 
@@ -21,7 +22,9 @@ class TurtleShell(cmd.Cmd):
         left(*parse(arg))
 
     def do_goto(self, arg):
-        """Move turtle to absolute position and change orientation: GO_TO 100 200"""
+        """Move turtle to absolute position and
+        change orientation: GO_TO 100 200
+        """
         goto(*parse(arg))
 
     def do_home(self, arg):
@@ -34,7 +37,7 @@ class TurtleShell(cmd.Cmd):
 
     def do_position(self, arg):
         """Print current turtle position: POSITION"""
-        print("Current position %d %d\n" %position())
+        print("Current position %d %d\n" % position())
 
     def do_heading(self, arg):
         """Print current turtle heading in degrees: HEADING"""
@@ -43,11 +46,13 @@ class TurtleShell(cmd.Cmd):
     def do_color(self, arg):
         'Set the color:  COLOR BLUE'
         color(arg.lower())
+
     def do_undo(self, arg):
         'Undo (repeatedly) the last turtle action(s):  UNDO'
     def do_reset(self, arg):
         'Clear the screen and return turtle to center:  RESET'
         reset()
+
     def do_bye(self, arg):
         'Stop recording, close the turtle window, and exit:  BYE'
         print('Thank you for using Turtle')
@@ -59,16 +64,19 @@ class TurtleShell(cmd.Cmd):
     def do_record(self, arg):
         'Save future commands to filename:  RECORD rose.cmd'
         self.file = open(arg, 'w')
+
     def do_playback(self, arg):
         'Playback commands from a file:  PLAYBACK rose.cmd'
         self.close()
         with open(arg) as f:
             self.cmdqueue.extend(f.read().splitlines())
+
     def precmd(self, line):
         line = line.lower()
         if self.file and 'playback' not in line:
             print(line, file=self.file)
         return line
+
     def close(self):
         if self.file:
             self.file.close()
@@ -78,9 +86,11 @@ class TurtleShell(cmd.Cmd):
         """Suport EOF character."""
         return True
 
+
 def parse(arg):
     'Convert a series of zero or more numbers to an argument tuple'
     return tuple(map(int, arg.split()))
+
 
 if __name__ == '__main__':
     TurtleShell().cmdloop()
