@@ -15,11 +15,21 @@ class BaseModel:
         updated_at (datetime): datetime when instance is updated
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialise the object instance."""
         self.id = str(uuid4())
         self.created_at = datetime.now()
         self.updated_at = self.created_at
+
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == '__class__':
+                    pass
+                elif key == 'created_at' or key == 'updated_at':
+                    self.__dict__[key] = datetime.strptime(
+                        value, '%Y-%m-%dT%H:%M:%S.%f')
+                else:
+                    self.__dict__[key] = value
 
     def save(self):
         """Update updated_at with current datetime."""
