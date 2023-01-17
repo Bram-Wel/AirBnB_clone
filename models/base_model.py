@@ -5,6 +5,8 @@
 from datetime import datetime
 from uuid import uuid4
 
+import models
+
 
 class BaseModel:
     """Define & manage common attributes and methods for subclasses.
@@ -30,10 +32,13 @@ class BaseModel:
                         value, '%Y-%m-%dT%H:%M:%S.%f')
                 else:
                     self.__dict__[key] = value
+        else:
+            models.storage.new(self)
 
     def save(self):
         """Update updated_at with current datetime."""
         self.updated_at = datetime.now()
+        models.storage.save()
 
     def to_dict(self):
         """Return a dictionary of writable instance attributes."""
