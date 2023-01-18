@@ -47,6 +47,6 @@ class FileStorage:
             with open(FileStorage.__file_path, 'r+', encoding='utf-8') as file:
                 temp = json.load(file)
             for i in temp.values():
-                self.new(eval(i['__class__'])(i))
+                self.new(eval(i['__class__'])(**i))
         except OSError:
             pass
