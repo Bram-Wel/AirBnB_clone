@@ -36,6 +36,15 @@ class FileStorageTestCase(unittest.TestCase):
                 temp = json.load(fil)
                 self.assertIsInstance(temp, dict)
                 self.assertIn(self.obj_base.to_dict(), temp.values())
+        temp = self.obj_base.updated_at
+        self.obj_base = BaseModel(**self.obj_base.to_dict())
+        self.assertEqual(temp, self.obj_base.updated_at)
+        self.obj_temp = BaseModel()
+        self.obj_base = BaseModel(**self.obj_temp.to_dict())
+        self.assertLess(temp, self.obj_base.updated_at)
+        self.assertEqual(self.obj_temp.updated_at, self.obj_base.updated_at)
+        self.obj_base.save()
+        self.assertGreater(self.obj_base.updated_at, self.obj_temp.updated_at)
 
     def test__file_path(self):
         """Test the FileStorage._FileStorage__file_path variable."""
