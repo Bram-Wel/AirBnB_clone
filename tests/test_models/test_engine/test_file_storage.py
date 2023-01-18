@@ -44,6 +44,7 @@ class FileStorageTestCase(unittest.TestCase):
         self.assertLess(temp, self.obj_base.updated_at)
         self.assertEqual(self.obj_temp.updated_at, self.obj_base.updated_at)
         self.obj_base.save()
+        self.assertIsInstance(self.obj_base.updated_at, datetime)
         self.assertGreater(self.obj_base.updated_at, self.obj_temp.updated_at)
 
     def test__file_path(self):
