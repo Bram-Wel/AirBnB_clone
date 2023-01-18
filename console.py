@@ -10,7 +10,7 @@ class HBNBCommand(cmd.Cmd):
 
     Args:
         @cmd.Cmd : Line oriented interpreter framework class
-        
+
     Attributes:
         prompt (str): String issued while soliciting input
     """
@@ -34,11 +34,13 @@ class HBNBCommand(cmd.Cmd):
         print("Quit command to exit the program")
 
     do_quit = do_EOF
+
     help_EOF = help_quit
 
     def emptyline(self):
         """Action for an empty line entry."""
         pass
+
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
