@@ -17,19 +17,42 @@ class FileStorageTestCase(unittest.TestCase):
         """Initialise test objects."""
         self.all_objs = storage.all()
         self.obj_base = BaseModel()
+        self.fs = storage
 
     def tearDown(self):
         """Destroy test objects."""
         del self.obj_base
         del self.all_objs
+        del self.fs
 
     def test_save(self):
         """Test that objects are saved to file."""
         self.obj_base.save()
-        self.assertTrue(os.path.exists('file.json'))
+        file = self.fs._FileStorage__file_path
+        self.assertTrue(os.path.exists(file))
         self.assertIn(self.obj_base, self.all_objs.values())
-        if os.path.exists('file.json'):
-            with open('file.json', 'r+', encoding='utf-8') as file:
-                temp = json.load(file)
+        if os.path.exists(file):
+            with open(file, 'r+', encoding='utf-8') as fil:
+                temp = json.load(fil)
                 self.assertIsInstance(temp, dict)
                 self.assertIn(self.obj_base.to_dict(), temp.values())
+
+    def test__file_path(self):
+        """Test the FileStorage._FileStorage__file_path variable."""
+        self.obj_base.save()
+        self.assertIsInstance(self.fs._FileStorage__file_path, str)
+        self.assertEqual(self.fs._FileStorage__file_path,
+                         'file.json')
+
+    def test__objects(self):
+        """Test the FileStorage._FileStorage__objects variable."""
+        self.assertIsInstance(self.fs._FileStorage__objects, dict)
+
+    def test_reload(self):
+        """Test reloading objects from file."""
+        self.obj_base.save()
+        self.fs._FileStorage__objects.clear()
+        self.assertEqual(self.fs._FileStorage__objects, {})
+        self.fs.reload()
+        self.assertIn(self.obj_base.to_dict(),
+                      [i.to_dict() for i in self.all_objs.values()])
