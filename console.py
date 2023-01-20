@@ -107,18 +107,20 @@ class HBNBCommand(cmd.Cmd):
         attr = None
         if check_args(line, self):
             key = make_key(line)
-            obj = object_dict(key)
-            try:
-                attr = args[2]
-                value = args[3]
-            except IndexError:
-                if attr:
-                    print("** value missing **")
+            if key:
+                obj = object_dict(key)
+                try:
+                    attr = args[2]
+                    value = args[3]
+                except IndexError:
+                    if attr:
+                        print("** value missing **")
+                    else:
+                        print("** attribute name missing **")
                 else:
-                    print("** attributes name missing **")
-            else:
-                setattr(obj, f"{attr}", value)
-                obj.save()
+                    if obj:
+                        setattr(obj, f"{attr}", value)
+                        obj.save()
 
     def help_create(self):
         """Print help for do_create."""
@@ -142,8 +144,9 @@ class HBNBCommand(cmd.Cmd):
 
     def help_update(self):
         """Print help for do_update."""
-        print("\n".join([" Update class instance.", "\t[Usage]", "\t-------"
-                        " update [class name] <id> <attribute name> <attribute value>"]))
+        print("\n".join([" Update class instance.", "\t[Usage]", "\t-------",
+                        " update [class name] <id> <attribute name> "
+                                                    + "<attribute value>"]))
 
     def help_quit(self):
         """Print help for do_exit."""
