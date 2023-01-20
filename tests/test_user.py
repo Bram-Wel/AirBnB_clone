@@ -35,15 +35,24 @@ class TestUser(unittest.TestCase):
         self.assertIsInstance(self.obj1.last_name, str)
         self.assertIsInstance(self.obj1.password, str)
 
-    def test_attributes(self):
+    def test_email(self):
         """Test setting and retrieving attributes."""
         setattr(self.obj1, "email", "airbnb@mail.com")
-        setattr(self.obj1, "first_name", "Betty")
-        setattr(self.obj1, "last_name", "Bar")
-        setattr(self.obj1, "password", "root")
         self.assertEqual("airbnb@mail.com", getattr(self.obj1, "email"))
+
+    def test_first_name(self):
+        """Test first_name."""
+        setattr(self.obj1, "first_name", "Betty")
         self.assertEqual("Betty", getattr(self.obj1, "first_name"))
+
+    def test_last_name(self):
+        """Test."""
+        setattr(self.obj1, "last_name", "Bar")
         self.assertEqual("Bar", getattr(self.obj1, "last_name"))
+
+    def test_password(self):
+        """Test."""
+        setattr(self.obj1, "password", "root")
         self.assertEqual("root", getattr(self.obj1, "password"))
 
     def test_save(self):
