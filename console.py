@@ -128,6 +128,17 @@ class HBNBCommand(cmd.Cmd):
                         setattr(obj, f"{attr}", value)
                         obj.save()
 
+    def do_count(self, line):
+        """Usage: count <class> or <class>.count()
+        Retrieve the number of instances of a given class."""
+        argl = parse_str(line)
+        if check_args(line, self):
+            count = 0
+            for obj in storage.all().values():
+                if argl[0] == obj.__class__.__name__:
+                    count += 1
+            print(count)
+
     def help_create(self):
         """Print help for do_create."""
         print("\n".join([" Create an object.", "\t[Usage]", "\t-----",
@@ -136,7 +147,8 @@ class HBNBCommand(cmd.Cmd):
     def help_show(self):
         """Print help for do_show."""
         print("\n".join([" Display a class instance.", "\t[Usage]",
-                        "\t-------", " show [CLASSNAME] <instance id>"]))
+                        "\t-------", " show [CLASSNAME] <instance id>",
+                        " [CLASSNAME].show(<id>)"]))
 
     def help_destroy(self):
         """Print help for do_destroy."""
@@ -146,7 +158,8 @@ class HBNBCommand(cmd.Cmd):
     def help_all(self):
         """Print help for do_all."""
         print("\n".join([" Print string representation of all instances.",
-                        "\t[Usage]", "\t-------", " all", " all [CLASSNAME]"]))
+                        "\t[Usage]", "\t-------", " all", " all [CLASSNAME]",
+                        " [CLASSNAME].all()"]))
 
     def help_update(self):
         """Print help for do_update."""
@@ -166,15 +179,49 @@ class HBNBCommand(cmd.Cmd):
         """Action for an empty line entry."""
         pass
 
+    def complete_class(self, text, line, begidx, endidx):
+        """Test Completions."""
+        return [i for i in HBNBCommand._TestCompletions if i.startswith(text)]
 
-def parse_ints(args):
+    def default(self, line):
+        """Defaults when command is unrecorgnised.
+
+        Args: Line buffered from readline
+        """
+        temp0 = parse_str(line)
+        temp = parse_str2(temp0[0])
+        if len(temp) == 2:
+            if temp[1] == 'all()':
+                self.do_all(temp[0].lstrip())
+            elif temp[1][:5] == 'show(':
+                self.do_show(temp[0].lstrip() + ' ' + temp[1][6:-2])
+            elif temp[1] == 'count()':
+                self.do_count(temp[0].lstrip())
+            elif temp[1][:8] == 'destroy(':
+                self.do_destroy(temp[0].lstrip() + ' ' + temp[1][9:-2])
+            elif temp[1][:7] == 'update(':
+                temp_attr, temp_val, temp_id = '', '', ''
+                temp_id = temp[1][8:-1].replace(',', '')
+                temp_id = temp_id.replace('\"', '') 
+                if len(temp0) > 1:
+                    temp_attr = temp0[1].replace('\"', '')
+                    temp_attr = temp_attr.replace(',', '')
+                    temp_attr = temp_attr.replace(')', '').lstrip()
+                if len(temp0) > 2:
+                    temp_val = temp0[2].replace('\"', '')
+                    temp_val = temp_val.replace(',', '')
+                    temp_val = temp_val.replace(')', '').lstrip()
+                self.do_update(" ".join([temp[0].lstrip(), temp_id, temp_attr, temp_val]))
+
+
+def parse_str2(arg):
     """Convert 0 or more nos. to integer argument tuple.
 
     Args:
-        @args (str): Argument line
-    Return: Tuple of integers arguments
+        @arg (str): Command from argument line
+    Return: Tuple of Split strings depending on '.'
     """
-    return tuple(map(int, args.split()))
+    return tuple(map(str, arg.split('.')))
 
 
 def parse_str(arg):
@@ -215,10 +262,6 @@ def check_args(args, obj=None):
         else:
             del storage.all()[key]
             return True
-
-    def complete_class(self, text, line, begidx, endidx):
-        """Test Completions."""
-        return [i for i in _TestCompletions if i.startswith(text)]
 
 
 def make_key(args):
