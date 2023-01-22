@@ -213,9 +213,11 @@ class HBNBCommand(cmd.Cmd):
                     self.do_update(args_str)
                 else:
                     args_lst.pop(2)
-                    args_str = ' '.join(args_lst)
                     for key, value in dct.items():
-                        self.do_update(args_str + ' ' + key + ' ' + value)
+                        temp = args_lst[:]
+                        temp.append(key)
+                        temp.append(value)
+                        self.do_update(' '.join(temp))
 
 
 def parse_str(arg):
