@@ -118,13 +118,21 @@ class HBNBCommand(cmd.Cmd):
             if key:
                 obj = object_dict(key)
                 try:
+                    print(args)
                     attr = args[2]
-                    value = args[3]
+                    value = eval(args[3])
+                    if value == str:
+                        value = args[3]
                 except IndexError:
                     if attr:
                         print("** value missing **")
                     else:
                         print("** attribute name missing **")
+                except (NameError, SyntaxError):  # Not sure about this.
+                    value = args[3]  # Feels like a bug on the way.
+                    if obj:
+                        setattr(obj, f"{attr}", value)
+                        obj.save()
                 else:
                     if obj:
                         setattr(obj, f"{attr}", value)
@@ -213,11 +221,9 @@ class HBNBCommand(cmd.Cmd):
                     self.do_update(args_str)
                 else:
                     args_lst.pop(2)
+                    args_str = ' '.join(args_lst)
                     for key, value in dct.items():
-                        temp = args_lst[:]
-                        temp.append(key)
-                        temp.append(value)
-                        self.do_update(' '.join(temp))
+                        self.do_update(args_str + ' ' + key + ' ' + str(value))
 
 
 def parse_str(arg):
