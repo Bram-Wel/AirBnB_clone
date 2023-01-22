@@ -3,6 +3,7 @@
 
 
 import cmd
+import re
 
 from models.amenity import Amenity
 from models.base_model import BaseModel
@@ -95,6 +96,7 @@ class HBNBCommand(cmd.Cmd):
                 l_st = [str(i) for i in temp.values()
                         if i.__class__.__name__ == class_name]
                 if l_st == []:
+                    # print("Debug: ")
                     print("** class doesn't exist **")
                 else:
                     print(l_st)
@@ -148,7 +150,7 @@ class HBNBCommand(cmd.Cmd):
         """Print help for do_show."""
         print("\n".join([" Display a class instance.", "\t[Usage]",
                         "\t-------", " show [CLASSNAME] <instance id>",
-                        " [CLASSNAME].show(<id>)"]))
+                            " [CLASSNAME].show(<id>)"]))
 
     def help_destroy(self):
         """Print help for do_destroy."""
@@ -159,7 +161,7 @@ class HBNBCommand(cmd.Cmd):
         """Print help for do_all."""
         print("\n".join([" Print string representation of all instances.",
                         "\t[Usage]", "\t-------", " all", " all [CLASSNAME]",
-                        " [CLASSNAME].all()"]))
+                            " [CLASSNAME].all()"]))
 
     def help_update(self):
         """Print help for do_update."""
@@ -179,8 +181,9 @@ class HBNBCommand(cmd.Cmd):
         """Action for an empty line entry."""
         pass
 
-    def complete_class(self, text, line, begidx, endidx):
+    def completedefault(self, text, line, begidx, endidx):
         """Test Completions."""
+        print(HBNBCommand._TestCompletions)
         return [i for i in HBNBCommand._TestCompletions if i.startswith(text)]
 
     def default(self, line):
@@ -188,40 +191,31 @@ class HBNBCommand(cmd.Cmd):
 
         Args: Line buffered from readline
         """
-        temp0 = parse_str(line)
-        temp = parse_str2(temp0[0])
-        if len(temp) == 2:
-            if temp[1] == 'all()':
-                self.do_all(temp[0].lstrip())
-            elif temp[1][:5] == 'show(':
-                self.do_show(temp[0].lstrip() + ' ' + temp[1][6:-2])
-            elif temp[1] == 'count()':
-                self.do_count(temp[0].lstrip())
-            elif temp[1][:8] == 'destroy(':
-                self.do_destroy(temp[0].lstrip() + ' ' + temp[1][9:-2])
-            elif temp[1][:7] == 'update(':
-                temp_attr, temp_val, temp_id = '', '', ''
-                temp_id = temp[1][8:-1].replace(',', '')
-                temp_id = temp_id.replace('\"', '') 
-                if len(temp0) > 1:
-                    temp_attr = temp0[1].replace('\"', '')
-                    temp_attr = temp_attr.replace(',', '')
-                    temp_attr = temp_attr.replace(')', '').lstrip()
-                if len(temp0) > 2:
-                    temp_val = temp0[2].replace('\"', '')
-                    temp_val = temp_val.replace(',', '')
-                    temp_val = temp_val.replace(')', '').lstrip()
-                self.do_update(" ".join([temp[0].lstrip(), temp_id, temp_attr, temp_val]))
-
-
-def parse_str2(arg):
-    """Convert 0 or more nos. to integer argument tuple.
-
-    Args:
-        @arg (str): Command from argument line
-    Return: Tuple of Split strings depending on '.'
-    """
-    return tuple(map(str, arg.split('.')))
+        args = parse_regex(line)
+        if args == ():
+            super().default(line)
+        else:
+            command = args[1]
+            args_lst = [i for i in args if i is not None and i != command]
+            args_str = ' '.join(args_lst)
+            if command == 'all':
+                self.do_all(args_str)
+            elif command == 'show':
+                self.do_show(args_str)
+            elif command == 'destroy':
+                self.do_destroy(args_str)
+            elif command == 'count':
+                self.do_count(args_str)
+            else:
+                try:
+                    dct = eval(args_lst[2])
+                except NameError:
+                    self.do_update(args_str)
+                else:
+                    args_lst.pop(2)
+                    args_str = ' '.join(args_lst)
+                    for key, value in dct.items():
+                        self.do_update(args_str + ' ' + key + ' ' + value)
 
 
 def parse_str(arg):
@@ -232,6 +226,42 @@ def parse_str(arg):
     Return: Tuple of arguments
     """
     return tuple(map(str, arg.split()))
+
+
+def parse_regex(args):
+    """Convert 0 or more nos. to integer argument tuple.
+
+    Args:
+        @args (str): Line buffered from readline
+    Return: Tuple of line arguments depending on regex matches
+    """
+    m_str = r'(?P<class_name>\w+(?=\.))\.(?P<command>\w+(?=\())\("?(?P<id>(?<=")[\w-]*)?'
+    match = re.compile(m_str)
+    search_a = re.compile(r'(?P<attr_values>(?<=["\s\'])\b\w+\b(?![-\.]))')
+    search_d = re.compile(r'(?P<dict_attr>(?<=\s){[\w\W]+})')
+
+    # args = args.lower()
+    res = match.match(args)
+    lst = []
+    if res:
+        class_name = res.group('class_name')
+        lst.append(class_name)
+        command = res.group('command')
+        lst.append(command)
+        id = res.group('id')
+        if id:
+            lst.append(id)
+            if command != 'update':
+                return tuple(map(str, lst))
+            res_d = search_d.search(args)
+            res_list = search_a.findall(args)
+            if res_d:
+                dict_attr = res_d.group('dict_attr')
+                lst.append(dict_attr)
+            else:
+                for i in res_list:
+                    lst.append(i)
+    return tuple(map(str, lst))
 
 
 def check_args(args, obj=None):
