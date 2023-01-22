@@ -118,7 +118,6 @@ class HBNBCommand(cmd.Cmd):
             if key:
                 obj = object_dict(key)
                 try:
-                    print(args)
                     attr = args[2]
                     value = eval(args[3])
                     if value == str:
@@ -219,6 +218,8 @@ class HBNBCommand(cmd.Cmd):
                     dct = eval(args_lst[2])
                 except NameError:
                     self.do_update(args_str)
+                except IndexError:
+                    pass
                 else:
                     args_lst.pop(2)
                     args_str = ' '.join(args_lst)
