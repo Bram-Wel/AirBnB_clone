@@ -26,8 +26,8 @@ class HBNBCommand(cmd.Cmd):
     """
 
     prompt = "(hbnb) "
-    _TestCompletions = ("BaseModel", "User", "State", "City", "Place"
-                        "Amenity", "Review")
+    _TestCompletions = ["BaseModel", "User", "State", "City", "Place",
+                        "Amenity", "Review"]
 
     def do_EOF(self, line):
         """Make a clean exit on End of file.
@@ -46,8 +46,8 @@ class HBNBCommand(cmd.Cmd):
         Description: Prints object id after successfull creation
         and saving object to file
         """
-        if (check_args(line, self)):
-            obj = eval(parse_str(line)[0])()
+        if (self.check_args(line, self)):
+            obj = eval(self.parse_str(line)[0])()
             obj.save()
             print(obj.id)
 
@@ -58,9 +58,9 @@ class HBNBCommand(cmd.Cmd):
             @line (str): Buffered line
         Description: This is done depending on object id
         """
-        if (check_args(line, self)):
-            key = make_key(line)
-            obj = object_dict(key)
+        if (self.check_args(line, self)):
+            key = self.make_key(line)
+            obj = self.object_dict(key)
             if obj is not None:
                 print(obj)
 
@@ -70,8 +70,8 @@ class HBNBCommand(cmd.Cmd):
         Args:
             @line (str): Buffered line
         """
-        if (check_args(line, self)):
-            key = make_key(line)
+        if (self.check_args(line, self)):
+            key = self.make_key(line)
             if key:
                 try:
                     del storage.all()[key]
@@ -88,7 +88,7 @@ class HBNBCommand(cmd.Cmd):
         """
         temp = storage.all()
         try:
-            class_name = parse_str(line)[0]
+            class_name = self.parse_str(line)[0]
         except IndexError:
             print([str(i) for i in temp.values()])
         else:
@@ -101,7 +101,7 @@ class HBNBCommand(cmd.Cmd):
                 else:
                     print(l_st)
             except Exception as e:
-                lastcmd = parse_str(self.lastcmd)[0]
+                lastcmd = self.parse_str(self.lastcmd)[0]
                 print(e, "\n help ", lastcmd)
                 self.onecmd("help " + lastcmd)
 
@@ -111,12 +111,12 @@ class HBNBCommand(cmd.Cmd):
         Args:
             @line (str): Buffered Line
         """
-        args = parse_str(line)
+        args = self.parse_str(line)
         attr = None
-        if check_args(line, self):
-            key = make_key(line)
+        if self.check_args(line, self):
+            key = self.make_key(line)
             if key:
-                obj = object_dict(key)
+                obj = self.object_dict(key)
                 try:
                     attr = args[2]
                     value = eval(args[3])
@@ -140,8 +140,8 @@ class HBNBCommand(cmd.Cmd):
     def do_count(self, line):
         """Usage: count <class> or <class>.count()
         Retrieve the number of instances of a given class."""
-        argl = parse_str(line)
-        if check_args(line, self):
+        argl = self.parse_str(line)
+        if self.check_args(line, self):
             count = 0
             for obj in storage.all().values():
                 if argl[0] == obj.__class__.__name__:
@@ -190,15 +190,16 @@ class HBNBCommand(cmd.Cmd):
 
     def completedefault(self, text, line, begidx, endidx):
         """Test Completions."""
-        print(HBNBCommand._TestCompletions)
-        return [i for i in HBNBCommand._TestCompletions if i.startswith(text)]
+        # print(HBNBCommand._TestCompletions)
+        return [i for i in HBNBCommand._TestCompletions
+                if i.startswith(text.capitalize())]
 
     def default(self, line):
         """Defaults when command is unrecorgnised.
 
         Args: Line buffered from readline
         """
-        args = parse_regex(line)
+        args = self.parse_regex(line)
         if args == ():
             super().default(line)
         else:
@@ -226,113 +227,114 @@ class HBNBCommand(cmd.Cmd):
                     for key, value in dct.items():
                         self.do_update(args_str + ' ' + key + ' ' + str(value))
 
+    @staticmethod
+    def parse_str(arg):
+        """Convert buffered line into arguments Tuple.
 
-def parse_str(arg):
-    """Convert buffered line into arguments Tuple.
+        Args:
+            @arg (str): Buffered line
+        Return: Tuple of arguments
+        """
+        return tuple(map(str, arg.split()))
 
-    Args:
-        @arg (str): Buffered line
-    Return: Tuple of arguments
-    """
-    return tuple(map(str, arg.split()))
+    @staticmethod
+    def parse_regex(args):
+        """Convert 0 or more nos. to integer argument tuple.
 
+        Args:
+            @args (str): Line buffered from readline
+        Return: Tuple of line arguments depending on regex matches
+        """
+        m_str = r'(?P<class_name>\w+(?=\.))\.(?P<command>\w+(?=\())\("?(?P<id>(?<=")[\w-]*)?'
+        match = re.compile(m_str)
+        search_a = re.compile(r'(?P<attr_values>(?<=["\s\'])\b\w+\b(?![-\.]))')
+        search_d = re.compile(r'(?P<dict_attr>(?<=\s){[\w\W]+})')
 
-def parse_regex(args):
-    """Convert 0 or more nos. to integer argument tuple.
+        # args = args.lower()
+        res = match.match(args)
+        lst = []
+        if res:
+            class_name = res.group('class_name')
+            lst.append(class_name)
+            command = res.group('command')
+            lst.append(command)
+            id = res.group('id')
+            if id:
+                lst.append(id)
+                if command != 'update':
+                    return tuple(map(str, lst))
+                res_d = search_d.search(args)
+                res_list = search_a.findall(args)
+                if res_d:
+                    dict_attr = res_d.group('dict_attr')
+                    lst.append(dict_attr)
+                else:
+                    for i in res_list:
+                        lst.append(i)
+        return tuple(map(str, lst))
 
-    Args:
-        @args (str): Line buffered from readline
-    Return: Tuple of line arguments depending on regex matches
-    """
-    m_str = r'(?P<class_name>\w+(?=\.))\.(?P<command>\w+(?=\())\("?(?P<id>(?<=")[\w-]*)?'
-    match = re.compile(m_str)
-    search_a = re.compile(r'(?P<attr_values>(?<=["\s\'])\b\w+\b(?![-\.]))')
-    search_d = re.compile(r'(?P<dict_attr>(?<=\s){[\w\W]+})')
+    @staticmethod
+    def check_args(args, obj=None):
+        """Check validity of parsed class.
 
-    # args = args.lower()
-    res = match.match(args)
-    lst = []
-    if res:
-        class_name = res.group('class_name')
-        lst.append(class_name)
-        command = res.group('command')
-        lst.append(command)
-        id = res.group('id')
-        if id:
-            lst.append(id)
-            if command != 'update':
-                return tuple(map(str, lst))
-            res_d = search_d.search(args)
-            res_list = search_a.findall(args)
-            if res_d:
-                dict_attr = res_d.group('dict_attr')
-                lst.append(dict_attr)
+        Args:
+            @args: Arguments tuple
+            @obj: Command instance
+        Description: Use obj to parse self or cmd instance for onecmd
+        execution.
+        Return: True if valid, False otherwise
+        """
+        #  TODO: Explore making this an instance method
+        try:
+            temp = obj.parse_str(args)[0]
+        except IndexError:
+            print("** class name missing **")
+        else:
+            try:
+                temp0 = eval(temp + '()')
+                key = temp + '.' + temp0.id
+            except NameError:
+                print("** class doesn't exist **")
+            except Exception as e:
+                print(e, "\n help ?")
+                if obj:
+                    lastcmd = obj.parse_str(obj.lastcmd)[0]
+                    obj.onecmd("help " + lastcmd)
             else:
-                for i in res_list:
-                    lst.append(i)
-    return tuple(map(str, lst))
+                del storage.all()[key]
+                return True
 
+    @staticmethod
+    def make_key(args):
+        """Make dictionary key from Classname & instance id.
 
-def check_args(args, obj=None):
-    """Check validity of parsed class.
-
-    Args:
-        @args: Arguments tuple
-        @obj: Command instance
-    Description: Use obj to parse self or cmd instance for onecmd
-    execution.
-    Return: True if valid, False otherwise
-    """
-    try:
-        temp = parse_str(args)[0]
-    except IndexError:
-        print("** class name missing **")
-    else:
+        Args:
+            @args: Line buffered by readline
+        Return: A key for the instance dictionary or None on failure
+        """
+        name = HBNBCommand.parse_str(args)
         try:
-            temp0 = eval(temp + '()')
-            key = temp + '.' + temp0.id
-        except NameError:
-            print("** class doesn't exist **")
-        except Exception as e:
-            print(e, "\n help ?")
-            if obj:
-                lastcmd = parse_str(obj.lastcmd)[0]
-                obj.onecmd("help " + lastcmd)
-        else:
-            del storage.all()[key]
-            return True
+            name[1]
+        except IndexError:
+            print("** instance id missing **")
+            return
+        return name[0] + '.' + name[1]
 
+    @staticmethod
+    def object_dict(key):
+        """Get object instance depending on key.
 
-def make_key(args):
-    """Make dictionary key from Classname & instance id.
-
-    Args:
-        @args: Line buffered by readline
-    Return: A key for the instance dictionary or None on failure
-    """
-    name = parse_str(args)
-    try:
-        name[1]
-    except IndexError:
-        print("** instance id missing **")
-        return
-    return name[0] + '.' + name[1]
-
-
-def object_dict(key):
-    """Get object instance depending on key.
-
-    Args:
-        @key (str): A concatanation of class name & object id
-    Return: A class instance or None on failure
-    """
-    if key:
-        try:
-            obj = storage.all()[key]
-        except KeyError:
-            print("** no instance found **")
-        else:
-            return obj
+        Args:
+            @key (str): A concatanation of class name & object id
+        Return: A class instance or None on failure
+        """
+        if key:
+            try:
+                obj = storage.all()[key]
+            except KeyError:
+                print("** no instance found **")
+            else:
+                return obj
 
 
 if __name__ == "__main__":
